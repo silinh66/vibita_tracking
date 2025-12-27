@@ -13,7 +13,15 @@ export const action = async ({ request }) => {
     // CUSTOMERS_REDACT: Delete data for a customer
     // SHOP_REDACT: Delete data for a shop (48 hours after uninstall)
 
-    console.log(`Received ${topic} webhook for ${shop}`);
+    switch (topic) {
+        case "CUSTOMERS_DATA_REQUEST":
+        case "CUSTOMERS_REDACT":
+        case "SHOP_REDACT":
+            console.log(`Received GDPR webhook: ${topic} for ${shop}`);
+            break;
+        default:
+            console.log(`Received ${topic} webhook for ${shop}`);
+    }
 
     return new Response("OK", { status: 200 });
 };
