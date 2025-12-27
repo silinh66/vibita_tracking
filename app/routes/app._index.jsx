@@ -22,9 +22,46 @@ import { parse } from "csv-parse/sync";
 import * as XLSX from "xlsx";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const { admin } = await authenticate.admin(request);
+  const url = new URL(request.url);
+
+  if (url.searchParams.get("action") === "download_sample") {
+    // Fetch real open orders to make the sample useful
+    const response = await admin.graphql(
+      `#graphql
+      query {
+        orders(first: 3, query: "fulfillment_status:unfulfilled") {
+          edges {
+            node {
+              name
+              legacyResourceId
+            }
+          }
+        }
+      }`
+    );
+    const responseJson = await response.json();
+    const orders = responseJson.data.orders.edges.map(e => e.node);
+
+    let csvContent = "Order Name,Tracking Number,Tracking Company\n";
+
+    if (orders.length > 0) {
+      orders.forEach((order, index) => {
+        csvContent += `${order.name},VIBITA-TEST-${1000 + index},FedEx\n`;
+      });
+    } else {
+      // Fallback if no orders
+      csvContent += "#1001,TEST-TRACK-1,DHL\n#1002,TEST-TRACK-2,FedEx\n#1003,TEST-TRACK-3,UPS\n";
+    }
+
+    return json({ csvContent });
+  }
+
   return null;
 };
+
+
+
 
 export const action = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -242,6 +279,23 @@ export default function Index() {
     }
   }, [actionData, shopify]);
 
+  // Handle Sample Download
+  const loadData = fetcher.data;
+  useEffect(() => {
+    if (loadData?.csvContent) {
+      const blob = new Blob([loadData.csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "sample_orders.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      shopify.toast.show("Sample file downloaded");
+    }
+  }, [loadData, shopify]);
+
   const handleDrop = useCallback((_droppedFiles, acceptedFiles, _rejectedFiles) => {
     setFile(acceptedFiles[0]);
   }, []);
@@ -255,7 +309,7 @@ export default function Index() {
 
   return (
     <Page>
-      <TitleBar title="Vibita Tracking Import" />
+      <TitleBar title="Vibita Tracking" />
       <BlockStack gap="500">
         <Layout>
           <Layout.Section>
@@ -268,6 +322,16 @@ export default function Index() {
                   Upload your CSV, Excel, or TXT file to sync tracking numbers to Shopify orders.
                   Ensure your file has columns for <b>Order Name</b> (e.g. #1001) and <b>Tracking Number</b>.
                 </Text>
+
+                <InlineStack align="start">
+                  <Button
+                    onClick={() => fetcher.load("/app?index&action=download_sample")}
+                    variant="tertiary"
+                    loading={fetcher.state === "loading" && fetcher.formMethod === "GET"}
+                  >
+                    Download Sample File
+                  </Button>
+                </InlineStack>
 
                 <DropZone onDrop={handleDrop} allowMultiple={false} accept=".csv, .xlsx, .xls, .txt" disabled={isLoading}>
                   {file ? (
