@@ -1,4 +1,5 @@
 import "@shopify/shopify-app-remix/adapters/node";
+import "dotenv/config";
 import {
   ApiVersion,
   AppDistribution,

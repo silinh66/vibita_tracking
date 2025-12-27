@@ -10,7 +10,7 @@ module.exports = {
 
             // Quan trọng: Báo PM2 đây là file binary, không phải JS thuần
             interpreter: "none",
-
+            env_file: ".env",
             env: {
                 PORT: 5188,
                 NODE_ENV: "production"
