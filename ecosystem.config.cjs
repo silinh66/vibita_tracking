@@ -1,14 +1,13 @@
 module.exports = {
     apps: [
         {
-            name: "vibita-tracking", // Đặt tên app tùy ý
+            name: "vibita tracking",
             script: "npm",
-            args: "run start", // Nó sẽ gọi lệnh "remix-serve ./build/server/index.js"
+            args: "run start",
+            interpreter: "none", // <--- THÊM DÒNG QUAN TRỌNG NÀY
             env: {
-                PORT: 5188,         // Port bạn muốn
-                NODE_ENV: "production",
-                // Nếu app cần thêm biến môi trường (API Key...), thêm vào đây:
-                // SHOPIFY_API_KEY: "...",
+                PORT: 5188,
+                NODE_ENV: "production"
             }
         }
     ]
