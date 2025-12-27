@@ -2,10 +2,9 @@ module.exports = {
     apps: [
         {
             name: "app.vibita",
-            // Thay vì gọi npm, ta gọi thẳng cmd của Windows
-            script: "C:\\Windows\\System32\\cmd.exe",
-            // Truyền lệnh "npm run start" vào cho cmd xử lý
-            args: "/c npm run start",
+            script: "npm",
+            args: "run start",
+            interpreter: "none", // <--- THÊM DÒNG QUAN TRỌNG NÀY
             env: {
                 PORT: 5188,
                 NODE_ENV: "production"
